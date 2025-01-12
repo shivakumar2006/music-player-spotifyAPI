@@ -14,39 +14,31 @@ const playerSlice = createSlice({
   initialState,
   reducers: {
     setActiveSong: (state, action) => {
-      state.activeSong = action.payload.song;
+      const { song, data, i } = action.payload;
+      state.activeSong = song;
+      state.currentIndex = i;
+      state.isActive = true;
 
-      if (action.payload?.data?.tracks?.hits) {
-        state.currentSongs = action.payload.data.tracks.hits;
-      } else if (action.payload?.data?.properties) {
-        state.currentSongs = action.payload?.data?.tracks;
+      if (data?.tracks?.hits) {
+        state.currentSongs = data.tracks.hits;
+      } else if (data?.tracks) {
+        state.currentSongs = data.tracks;
       } else {
-        state.currentSongs = action.payload.data;
+        state.currentSongs = data || [];
       }
+    },
 
-      state.currentIndex = action.payload.i;
+    nextSong: (state) => {
+      const nextIndex = (state.currentIndex + 1) % state.currentSongs.length;
+      state.activeSong = state.currentSongs[nextIndex]?.track || state.currentSongs[nextIndex];
+      state.currentIndex = nextIndex;
       state.isActive = true;
     },
 
-    nextSong: (state, action) => {
-      if (state.currentSongs[action.payload]?.track) {
-        state.activeSong = state.currentSongs[action.payload]?.track;
-      } else {
-        state.activeSong = state.currentSongs[action.payload];
-      }
-
-      state.currentIndex = action.payload;
-      state.isActive = true;
-    },
-
-    prevSong: (state, action) => {
-      if (state.currentSongs[action.payload]?.track) {
-        state.activeSong = state.currentSongs[action.payload]?.track;
-      } else {
-        state.activeSong = state.currentSongs[action.payload];
-      }
-
-      state.currentIndex = action.payload;
+    prevSong: (state) => {
+      const prevIndex = (state.currentIndex - 1 + state.currentSongs.length) % state.currentSongs.length;
+      state.activeSong = state.currentSongs[prevIndex]?.track || state.currentSongs[prevIndex];
+      state.currentIndex = prevIndex;
       state.isActive = true;
     },
 

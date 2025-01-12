@@ -1,33 +1,49 @@
 /* eslint-disable jsx-a11y/media-has-caption */
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from "react";
 
 const Player = ({ activeSong, isPlaying, volume, seekTime, onEnded, onTimeUpdate, onLoadedData, repeat }) => {
-  const ref = useRef(null);
-  // eslint-disable-next-line no-unused-expressions
-  if (ref.current) {
-    if (isPlaying) {
-      ref.current.play();
-    } else {
-      ref.current.pause();
-    }
-  }
+  const audioRef = useRef(null);
 
   useEffect(() => {
-    ref.current.volume = volume;
-  }, [volume]);
-  // updates audio element only on seekTime change (and not on each rerender):
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch((error) => {
+          console.error("Audio playback failed:", error);
+        });
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
+
   useEffect(() => {
-    ref.current.currentTime = seekTime;
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = seekTime;
+    }
   }, [seekTime]);
+
+  useEffect(() => {
+    console.log("Active Song:", activeSong);
+    console.log("Audio Source URL:", activeSong?.hub?.actions[1]?.uri || activeSong?.uri);
+  }, [activeSong]);
 
   return (
     <audio
-      src={activeSong?.hub?.actions[1]?.uri}
-      ref={ref}
+      src={activeSong?.hub?.actions[1]?.uri || activeSong?.uri || ""}
+      ref={audioRef}
       loop={repeat}
       onEnded={onEnded}
       onTimeUpdate={onTimeUpdate}
       onLoadedData={onLoadedData}
+      onError={(e) => {
+        console.error("Audio Error:", e);
+      }}
     />
   );
 };
